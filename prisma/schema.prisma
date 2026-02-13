@@ -1,0 +1,381 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User Model
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique @db.VarChar(255)
+  password  String   @db.VarChar(255)
+  role      UserRole
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  expenses        Expense[]
+  incomes         Income[]
+  loans           Loan[]
+  vendorPayments  VendorPayment[]
+  editRequests    EditRequest[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  owner
+  accountant
+}
+
+// Project Model
+model Project {
+  id               String       @id @default(cuid())
+  name             String       @db.VarChar(255)
+  type             ProjectType
+  customerName     String?      @map("customer_name") @db.VarChar(255)
+  investorCustomerPercentage Float?    @map("investor_customer_percentage")
+  investorCompanyPercentage  Float?    @map("investor_company_percentage")
+  agreementTotalAmount      Float      @map("agreement_total_amount")
+  agreementStartDate        DateTime   @map("agreement_start_date")
+  agreementEndDate          DateTime   @map("agreement_end_date")
+  agreementDescription      String?    @map("agreement_description") @db.Text
+  supervisor       String?      @db.VarChar(255)
+  contractors      String[]     @default([])
+  vendors          String[]     @default([])
+  status           ProjectStatus @default(active)
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  expenses        Expense[]
+  incomes         Income[]
+  loans           Loan[]
+  linkedProjectLoans Loan[]     @relation("LinkedProjectLoans")
+  vendorPayments  VendorPayment[]
+  editRequests    EditRequest[]
+  vendorRecords   Vendor[]     @relation("VendorProject")
+  contractorRecords Contractor[] @relation("ContractorProject")
+
+  @@map("projects")
+}
+
+enum ProjectType {
+  customer
+  company
+  investor
+}
+
+enum ProjectStatus {
+  active
+  completed
+  on_hold @map("on-hold")
+}
+
+// Income Model
+model Income {
+  id            String        @id @default(cuid())
+  projectId     String        @map("project_id")
+  amount        Float
+  date          DateTime
+  description   String        @db.Text
+  mode          PaymentMode
+  bankName      String?       @map("bank_name") @db.VarChar(255)
+  accountNumber String?       @map("account_number") @db.VarChar(255)
+  cashLocation  CashLocation? @map("cash_location")
+  enteredById   String        @map("entered_by_id")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  enteredBy User    @relation(fields: [enteredById], references: [id])
+
+  @@index([projectId])
+  @@index([date])
+  @@map("incomes")
+}
+
+enum PaymentMode {
+  bank
+  cash
+}
+
+enum CashLocation {
+  locker1
+  locker2
+}
+
+// Expense Model
+model Expense {
+  id                    String            @id @default(cuid())
+  projectId             String            @map("project_id")
+  vendorId              String?           @map("vendor_id")
+  vendor                String?           @db.VarChar(255)
+  type                  ExpenseType
+  amount                Float
+  date                  DateTime
+  description           String            @db.Text
+  mode                  PaymentMode
+  paidBy                PaidBy            @map("paid_by")
+  bankName              String?           @map("bank_name") @db.VarChar(255)
+  accountNumber         String?           @map("account_number") @db.VarChar(255)
+  cashLocation          CashLocation?     @map("cash_location")
+  
+  // Material specific
+  materialName          String?           @map("material_name") @db.VarChar(255)
+  materialQuantity      Float?            @map("material_quantity")
+  materialUnit          String?           @map("material_unit") @db.VarChar(50)
+  
+  // Vendor payment tracking
+  vendorPaymentStatus   VendorPaymentStatus? @map("vendor_payment_status") @default(pending)
+  vendorPaidAmount      Float?            @map("vendor_paid_amount") @default(0)
+  
+  // Labor specific
+  laborType             LaborType?        @map("labor_type")
+  contractorId          String?           @map("contractor_id")
+  contractorName        String?           @map("contractor_name") @db.VarChar(255)
+  teamName              String?           @map("team_name") @db.VarChar(255)
+  laborName             String?           @map("labor_name") @db.VarChar(255)
+  
+  // Petty cash specific
+  supervisorName        String?           @map("supervisor_name") @db.VarChar(255)
+  pettyCashSummary      String?           @map("petty_cash_summary") @db.Text
+  weekEnding            DateTime?         @map("week_ending")
+  
+  // Payment tracking
+  paymentsBySourceLocker1 Float?          @map("payments_by_source_locker1") @default(0)
+  paymentsBySourceLocker2 Float?          @map("payments_by_source_locker2") @default(0)
+  paymentsBySourceBank    Float?          @map("payments_by_source_bank") @default(0)
+  
+  enteredById           String            @map("entered_by_id")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  // Relations
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  vendorRel  Vendor?   @relation("ExpenseVendor", fields: [vendorId], references: [id])
+  contractor Contractor? @relation("ExpenseContractor", fields: [contractorId], references: [id])
+  enteredBy  User      @relation(fields: [enteredById], references: [id])
+  paymentHistory ExpensePaymentHistory[]
+
+  @@index([projectId])
+  @@index([date])
+  @@index([vendorId])
+  @@index([contractorId])
+  @@map("expenses")
+}
+
+model ExpensePaymentHistory {
+  id            String   @id @default(cuid())
+  expenseId     String   @map("expense_id")
+  amount        Float
+  date          DateTime
+  mode          PaymentMode
+  cashLocation  CashLocation? @map("cash_location")
+  bankName      String?  @map("bank_name") @db.VarChar(255)
+  accountNumber String?  @map("account_number") @db.VarChar(255)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+  @@map("expense_payment_history")
+}
+
+enum ExpenseType {
+  material
+  labor
+  factory_overhead @map("factory-overhead")
+  petty_cash      @map("petty-cash")
+}
+
+enum PaidBy {
+  customer
+  company
+}
+
+enum VendorPaymentStatus {
+  pending
+  partial
+  full
+}
+
+enum LaborType {
+  direct
+  contractor
+}
+
+// Vendor Model
+model Vendor {
+  id             String        @id @default(cuid())
+  projectId      String?       @map("project_id")
+  name           String        @db.VarChar(255)
+  phone          String?       @db.VarChar(50)
+  address        String?       @db.Text
+  totalPurchased Float         @map("total_purchased") @default(0)
+  totalPaid      Float         @map("total_paid") @default(0)
+  balance        Float         @default(0)
+  status         VendorStatus  @default(active)
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  project        Project?      @relation("VendorProject", fields: [projectId], references: [id], onDelete: SetNull)
+  expenses       Expense[]     @relation("ExpenseVendor")
+  vendorPayments VendorPayment[]
+
+  @@index([projectId, name])
+  @@map("vendors")
+}
+
+enum VendorStatus {
+  active
+  settled
+}
+
+// Contractor Model
+model Contractor {
+  id            String           @id @default(cuid())
+  projectId     String?          @map("project_id")
+  name          String           @db.VarChar(255)
+  phone         String?          @db.VarChar(50)
+  agreedAmount  Float            @map("agreed_amount")
+  totalPaid     Float            @map("total_paid") @default(0)
+  balance       Float            @default(0)
+  status        ContractorStatus @default(active)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  project   Project?   @relation("ContractorProject", fields: [projectId], references: [id], onDelete: SetNull)
+  expenses  Expense[]  @relation("ExpenseContractor")
+
+  @@index([projectId, name])
+  @@map("contractors")
+}
+
+enum ContractorStatus {
+  active
+  completed
+}
+
+// Loan Model
+model Loan {
+  id              String     @id @default(cuid())
+  projectId       String     @map("project_id")
+  borrowerName    String     @map("borrower_name") @default("") @db.VarChar(255)
+  amountGiven     Float      @map("amount_given")
+  dateGiven       DateTime   @map("date_given")
+  amountReturned  Float      @map("amount_returned") @default(0)
+  dateReturned    DateTime?  @map("date_returned")
+  description     String?    @db.Text
+  status          LoanStatus @default(active)
+  loanType        LoanType   @map("loan_type") @default(external)
+  direction       LoanDirection?
+  linkedProjectId String?    @map("linked_project_id")
+  linkedLoanId    String?    @map("linked_loan_id")
+  enteredById     String     @map("entered_by_id")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+
+  // Relations
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  linkedProject Project? @relation("LinkedProjectLoans", fields: [linkedProjectId], references: [id])
+  linkedLoan   Loan?    @relation("LinkedLoans", fields: [linkedLoanId], references: [id])
+  enteredBy    User     @relation(fields: [enteredById], references: [id])
+  linkedLoans  Loan[]   @relation("LinkedLoans")
+
+  @@index([projectId])
+  @@index([dateGiven])
+  @@map("loans")
+}
+
+enum LoanStatus {
+  active
+  returned
+  partial
+}
+
+enum LoanType {
+  external
+  inter_project @map("inter-project")
+}
+
+enum LoanDirection {
+  payable
+  receivable
+}
+
+// VendorPayment Model
+model VendorPayment {
+  id              String           @id @default(cuid())
+  vendorId        String           @map("vendor_id")
+  projectId       String?          @map("project_id")
+  amount          Float
+  date            DateTime
+  description     String           @db.Text
+  mode            PaymentMode
+  bankName        String?          @map("bank_name") @db.VarChar(255)
+  accountNumber   String?          @map("account_number") @db.VarChar(255)
+  cashLocation    CashLocation?    @map("cash_location")
+  sourceType      PaymentSourceType @map("source_type") @default(manual)
+  sourceExpenseId String?          @map("source_expense_id")
+  appliedToExpenses Boolean         @map("applied_to_expenses") @default(false)
+  enteredById     String           @map("entered_by_id")
+  createdAt       DateTime         @default(now()) @map("created_at")
+  updatedAt       DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  enteredBy   User     @relation(fields: [enteredById], references: [id])
+
+  @@index([vendorId, date(sort: Desc)])
+  @@index([projectId])
+  @@map("vendor_payments")
+}
+
+enum PaymentSourceType {
+  manual
+  expense
+}
+
+// EditRequest Model
+model EditRequest {
+  id            String         @id @default(cuid())
+  collectionName CollectionName @map("collection_name")
+  originalId    String         @map("original_id")
+  newData       Json           @map("new_data")
+  status        RequestStatus  @default(pending)
+  requestedById String         @map("requested_by_id")
+  projectId     String         @map("project_id")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  requestedBy User    @relation(fields: [requestedById], references: [id])
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([projectId])
+  @@map("edit_requests")
+}
+
+enum CollectionName {
+  Expense
+  Income
+  Loan
+}
+
+enum RequestStatus {
+  pending
+  approved
+  rejected
+}
