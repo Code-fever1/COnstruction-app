@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const serialized = payments.map((p) => ({
+    const serialized = payments.map((p: { id: string; vendor: { id: string; name: string }; project: { id: string; name: string } | null; enteredBy: { id: string; name: string } | null }) => ({
       ...p,
       _id: p.id,
       vendorId: p.vendor,

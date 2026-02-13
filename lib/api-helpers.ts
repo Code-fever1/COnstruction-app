@@ -4,7 +4,7 @@ export function normalizeNameList(value: unknown): string[] {
   return Array.from(
     new Set(
       value
-        .map((item) => String(item ?? '').trim())
+        .map((item: unknown) => String(item ?? '').trim())
         .filter(Boolean)
     )
   );

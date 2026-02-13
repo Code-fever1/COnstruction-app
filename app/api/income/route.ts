@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const serialized = income.map((inc) => ({
+    const serialized = income.map((inc: { id: string; project: { id: string; name: string } | null; enteredBy: { id: string; name: string } | null }) => ({
       ...inc,
       _id: inc.id,
       projectId: inc.project,

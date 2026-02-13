@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const serialized = loans.map((loan) => ({
+    const serialized = loans.map((loan: { id: string; project: { id: string; name: string } | null; linkedProject: { id: string; name: string } | null; enteredBy: { id: string; name: string } | null }) => ({
       ...loan,
       _id: loan.id,
       projectId: loan.project,

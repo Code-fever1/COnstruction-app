@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const serialized = requests.map((r) => ({
+    const serialized = requests.map((r: { id: string; requestedBy: { id: string; name: string; email: string }; project: { id: string; name: string } | null; originalId: string }) => ({
       ...r,
       _id: r.id,
       requestedBy: r.requestedBy,
