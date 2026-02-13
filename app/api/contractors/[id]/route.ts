@@ -2,13 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
-
-interface ExpenseItem {
-  id: string;
-  amount: number;
-  project: { id: string; name: string } | null;
-  [key: string]: any;
-}
+import { getErrorMessage } from '@/types';
 
 export async function GET(
   request: NextRequest,
@@ -43,7 +37,7 @@ export async function GET(
       orderBy: { date: 'desc' },
     });
 
-    const totalPaid = expenses.reduce((sum: number, e: ExpenseItem) => sum + e.amount, 0);
+    const totalPaid = expenses.reduce((sum: number, e) => sum + e.amount, 0);
 
     return NextResponse.json({
       ...contractor,
@@ -53,8 +47,8 @@ export async function GET(
       balance: contractor.agreedAmount - totalPaid,
       expenses: expenses.map((e) => ({ ...e, _id: e.id, projectId: e.project })),
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -82,11 +76,11 @@ export async function PUT(
       include: { project: { select: { id: true, name: true } } },
     });
     return NextResponse.json({ ...contractor, _id: contractor.id, projectId: contractor.project });
-  } catch (error: any) {
-    if ((error as any).code === 'P2025') {
+  } catch (error: unknown) {
+    if ((error as { code?: string }).code === 'P2025') {
       return NextResponse.json({ error: 'Contractor not found' }, { status: 404 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -99,7 +93,7 @@ export async function DELETE(
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if ((session.user as any).role !== 'owner') {
+    if (session.user.role !== 'owner') {
       return NextResponse.json(
         { error: 'Only owners can delete contractors' },
         { status: 403 }
@@ -136,7 +130,7 @@ export async function DELETE(
 
     await prisma.contractor.delete({ where: { id } });
     return NextResponse.json({ message: 'Contractor deleted successfully' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

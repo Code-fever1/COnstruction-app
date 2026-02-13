@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
-import { normalizeNameList, projectToApiShape, projectFromBody } from '@/lib/api-helpers';
+import { normalizeNameList, projectToApiShape } from '@/lib/api-helpers';
+import { getErrorMessage } from '@/types';
+
+interface InvestorPercentage {
+  customer?: number | null;
+  company?: number | null;
+}
 
 async function syncProjectParties(
   projectId: string,
@@ -65,9 +71,9 @@ export async function GET(
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
     return NextResponse.json(projectToApiShape(project));
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -83,7 +89,7 @@ export async function PUT(
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if ((session.user as any).role !== 'owner') {
+    if (session.user.role !== 'owner') {
       return NextResponse.json(
         { error: 'Only owners can update projects' },
         { status: 403 }
@@ -104,14 +110,16 @@ export async function PUT(
     updatePayload.contractors = contractorNames;
     updatePayload.vendors = vendorNames;
 
+    const investorPercentage = updatePayload.investorPercentage as InvestorPercentage | undefined;
+
     const project = await prisma.project.update({
       where: { id },
       data: {
         name: updatePayload.name as string,
         type: updatePayload.type as 'customer' | 'company' | 'investor',
         customerName: (updatePayload.customerName as string) ?? null,
-        investorCustomerPercentage: (updatePayload.investorPercentage as any)?.customer ?? null,
-        investorCompanyPercentage: (updatePayload.investorPercentage as any)?.company ?? null,
+        investorCustomerPercentage: investorPercentage?.customer ?? null,
+        investorCompanyPercentage: investorPercentage?.company ?? null,
         agreementTotalAmount: updatePayload.agreementTotalAmount as number,
         agreementStartDate: updatePayload.agreementStartDate ? new Date(updatePayload.agreementStartDate as string) : undefined,
         agreementEndDate: updatePayload.agreementEndDate ? new Date(updatePayload.agreementEndDate as string) : undefined,
@@ -125,12 +133,12 @@ export async function PUT(
 
     await syncProjectParties(project.id, contractorNames, vendorNames);
     return NextResponse.json(projectToApiShape(project));
-  } catch (error: any) {
-    if ((error as any).code === 'P2025') {
+  } catch (error: unknown) {
+    if ((error as { code?: string }).code === 'P2025') {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -146,7 +154,7 @@ export async function DELETE(
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if ((session.user as any).role !== 'owner') {
+    if (session.user.role !== 'owner') {
       return NextResponse.json(
         { error: 'Only owners can delete projects' },
         { status: 403 }
@@ -157,12 +165,12 @@ export async function DELETE(
       where: { id },
     });
     return NextResponse.json({ message: 'Project deleted successfully' });
-  } catch (error: any) {
-    if ((error as any).code === 'P2025') {
+  } catch (error: unknown) {
+    if ((error as { code?: string }).code === 'P2025') {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }

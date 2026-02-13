@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
+import { getErrorMessage } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -80,8 +81,8 @@ export async function GET(request: NextRequest) {
       })
     );
     return NextResponse.json(withBalances);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
       { ...contractor, _id: contractor.id, projectId: contractor.project },
       { status: 201 }
     );
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

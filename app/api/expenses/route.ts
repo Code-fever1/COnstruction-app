@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
+import { getErrorMessage } from '@/types';
 
 function mapExpenseToApi(exp: {
   id: string;
@@ -34,6 +35,8 @@ function mapExpenseToApi(exp: {
   paymentsBySourceLocker2: number | null;
   paymentsBySourceBank: number | null;
   enteredById: string;
+  createdAt: Date;
+  updatedAt: Date;
   project?: { id: string; name: string } | null;
   vendorRel?: { id: string; name: string } | null;
   contractor?: { id: string; name: string } | null;
@@ -42,7 +45,7 @@ function mapExpenseToApi(exp: {
 }) {
   return {
     _id: exp.id,
-    projectId: exp.project ?? { _id: exp.projectId, name: (exp.project as any)?.name },
+    projectId: exp.project ?? { _id: exp.projectId, name: (exp.project as { name?: string } | null)?.name },
     vendorId: exp.vendorRel?.id ?? exp.vendorId,
     vendor: exp.vendor,
     type: exp.type === 'factory_overhead' ? 'factory-overhead' : exp.type === 'petty_cash' ? 'petty-cash' : exp.type,
@@ -79,8 +82,8 @@ function mapExpenseToApi(exp: {
     },
     enteredBy: exp.enteredBy ?? exp.enteredById,
     paymentHistory: exp.paymentHistory ?? [],
-    createdAt: (exp as any).createdAt,
-    updatedAt: (exp as any).updatedAt,
+    createdAt: exp.createdAt,
+    updatedAt: exp.updatedAt,
   };
 }
 
@@ -108,9 +111,9 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(expenses.map(mapExpenseToApi));
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -124,7 +127,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await request.json();
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
     const numericAmount = Number(data.amount) || 0;
     const requestedPaidAmount = Number(data.vendorPaidAmount) || 0;
     const paymentStatus = data.vendorPaymentStatus || 'pending';
@@ -211,9 +214,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(mapExpenseToApi(expense), { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
