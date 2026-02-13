@@ -63,11 +63,11 @@ export async function GET(request: NextRequest) {
       prisma.loan.findMany({ where }),
     ]);
 
-    const totalIncome = allIncome.reduce((sum: number, inc) => sum + inc.amount, 0);
-    const bankIncome = allIncome.filter((inc) => inc.mode === 'bank').reduce((sum: number, inc) => sum + inc.amount, 0);
-    const cashIncome = allIncome.filter((inc) => inc.mode === 'cash').reduce((sum: number, inc) => sum + inc.amount, 0);
+    const totalIncome = allIncome.reduce((sum: number, inc: { amount: number }) => sum + inc.amount, 0);
+    const bankIncome = allIncome.filter((inc) => inc.mode === 'bank').reduce((sum: number, inc: { amount: number }) => sum + inc.amount, 0);
+    const cashIncome = allIncome.filter((inc) => inc.mode === 'cash').reduce((sum: number, inc: { amount: number }) => sum + inc.amount, 0);
 
-    const totalExpenses = allExpenses.reduce((sum: number, exp) => {
+    const totalExpenses = allExpenses.reduce((sum: number, exp: any) => {
       if (exp.type === 'material' && exp.vendorPaymentStatus === 'pending') return sum;
       if (exp.type === 'material' && exp.vendorPaymentStatus === 'partial' && exp.vendorPaidAmount) return sum + exp.vendorPaidAmount;
       return sum + exp.amount;
@@ -75,28 +75,28 @@ export async function GET(request: NextRequest) {
 
     const materialExpenses = allExpenses
       .filter((exp) => exp.type === 'material')
-      .reduce((sum: number, exp) => {
+      .reduce((sum: number, exp: any) => {
         if (exp.vendorPaymentStatus === 'pending') return sum;
         if (exp.vendorPaymentStatus === 'partial' && exp.vendorPaidAmount) return sum + exp.vendorPaidAmount;
         return sum + exp.amount;
       }, 0);
-    const laborExpenses = allExpenses.filter((exp) => exp.type === 'labor').reduce((sum: number, exp) => sum + exp.amount, 0);
-    const overheadExpenses = allExpenses.filter((exp) => exp.type === 'factory_overhead').reduce((sum: number, exp) => sum + exp.amount, 0);
-    const pettyCashExpenses = allExpenses.filter((exp) => exp.type === 'petty_cash').reduce((sum: number, exp) => sum + exp.amount, 0);
+    const laborExpenses = allExpenses.filter((exp) => exp.type === 'labor').reduce((sum: number, exp: { amount: number }) => sum + exp.amount, 0);
+    const overheadExpenses = allExpenses.filter((exp) => exp.type === 'factory_overhead').reduce((sum: number, exp: { amount: number }) => sum + exp.amount, 0);
+    const pettyCashExpenses = allExpenses.filter((exp) => exp.type === 'petty_cash').reduce((sum: number, exp: { amount: number }) => sum + exp.amount, 0);
 
-    const bankExpenses = allExpenses.filter((exp) => exp.mode === 'bank').reduce((sum: number, exp) => sum + exp.amount, 0);
-    const cashExpenses = allExpenses.filter((exp) => exp.mode === 'cash').reduce((sum: number, exp) => sum + exp.amount, 0);
+    const bankExpenses = allExpenses.filter((exp) => exp.mode === 'bank').reduce((sum: number, exp: { amount: number }) => sum + exp.amount, 0);
+    const cashExpenses = allExpenses.filter((exp) => exp.mode === 'cash').reduce((sum: number, exp: { amount: number }) => sum + exp.amount, 0);
 
-    const cashAtBank = bankIncome - allExpenses.reduce((sum: number, exp) => sum + getEffectiveExpenseForCashPosition(exp as ExpenseRow, 'bank'), 0);
+    const cashAtBank = bankIncome - allExpenses.reduce((sum: number, exp: any) => sum + getEffectiveExpenseForCashPosition(exp as ExpenseRow, 'bank'), 0);
     const cashInLocker1 =
-      allIncome.filter((inc) => inc.mode === 'cash' && inc.cashLocation === 'locker1').reduce((sum: number, inc) => sum + inc.amount, 0) -
-      allExpenses.reduce((sum: number, exp) => sum + getEffectiveExpenseForCashPosition(exp as ExpenseRow, 'locker1'), 0);
+      allIncome.filter((inc) => inc.mode === 'cash' && inc.cashLocation === 'locker1').reduce((sum: number, inc: { amount: number }) => sum + inc.amount, 0) -
+      allExpenses.reduce((sum: number, exp: any) => sum + getEffectiveExpenseForCashPosition(exp as ExpenseRow, 'locker1'), 0);
     const cashInLocker2 =
-      allIncome.filter((inc) => inc.mode === 'cash' && inc.cashLocation === 'locker2').reduce((sum: number, inc) => sum + inc.amount, 0) -
-      allExpenses.reduce((sum: number, exp) => sum + getEffectiveExpenseForCashPosition(exp as ExpenseRow, 'locker2'), 0);
+      allIncome.filter((inc) => inc.mode === 'cash' && inc.cashLocation === 'locker2').reduce((sum: number, inc: { amount: number }) => sum + inc.amount, 0) -
+      allExpenses.reduce((sum: number, exp: any) => sum + getEffectiveExpenseForCashPosition(exp as ExpenseRow, 'locker2'), 0);
 
-    const totalLoansGiven = allLoans.reduce((sum: number, loan) => sum + loan.amountGiven, 0);
-    const totalLoansReturned = allLoans.reduce((sum: number, loan) => sum + loan.amountReturned, 0);
+    const totalLoansGiven = allLoans.reduce((sum: number, loan: { amountGiven: number }) => sum + loan.amountGiven, 0);
+    const totalLoansReturned = allLoans.reduce((sum: number, loan: { amountReturned: number }) => sum + loan.amountReturned, 0);
     const activeLoans = allLoans.filter((loan) => loan.status === 'active');
 
     const materialSummary: Record<string, { quantity: number; totalCost: number; unit: string }> = {};

@@ -37,7 +37,7 @@ export async function GET(
       orderBy: { date: 'desc' },
     });
 
-    const totalPaid = expenses.reduce((sum: number, e) => sum + e.amount, 0);
+    const totalPaid = expenses.reduce((sum: number, e: { amount: number }) => sum + e.amount, 0);
 
     return NextResponse.json({
       ...contractor,

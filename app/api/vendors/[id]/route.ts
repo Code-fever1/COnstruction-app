@@ -42,8 +42,8 @@ export async function GET(
       orderBy: { date: 'desc' },
     });
 
-    const totalPurchased = expenses.reduce((sum: number, e) => sum + e.amount, 0);
-    const totalPaid = payments.reduce((sum: number, p) => sum + p.amount, 0);
+    const totalPurchased = expenses.reduce((sum: number, e: { amount: number }) => sum + e.amount, 0);
+    const totalPaid = payments.reduce((sum: number, p: { amount: number }) => sum + p.amount, 0);
 
     return NextResponse.json({
       ...vendor,
