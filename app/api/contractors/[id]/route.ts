@@ -45,7 +45,7 @@ export async function GET(
       projectId: contractor.project,
       totalPaid,
       balance: contractor.agreedAmount - totalPaid,
-      expenses: expenses.map((e) => ({ ...e, _id: e.id, projectId: e.project })),
+      expenses: expenses.map((e: { id: string; project: { id: string; name: string } | null }) => ({ ...e, _id: e.id, projectId: e.project })),
     });
   } catch (error: unknown) {
     return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });

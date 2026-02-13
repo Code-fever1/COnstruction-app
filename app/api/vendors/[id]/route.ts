@@ -52,8 +52,8 @@ export async function GET(
       totalPurchased,
       totalPaid,
       balance: totalPurchased - totalPaid,
-      expenses: expenses.map((e) => ({ ...e, _id: e.id, projectId: e.project })),
-      payments: payments.map((p) => ({ ...p, _id: p.id, enteredBy: p.enteredBy })),
+      expenses: expenses.map((e: { id: string; project: { id: string; name: string } | null }) => ({ ...e, _id: e.id, projectId: e.project })),
+      payments: payments.map((p: { id: string; enteredBy: { id: string; name: string } }) => ({ ...p, _id: p.id, enteredBy: p.enteredBy })),
     });
   } catch (error: unknown) {
     return NextResponse.json(
