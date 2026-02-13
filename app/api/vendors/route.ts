@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
           orderBy: { name: 'asc' },
         });
         const withBalances = await Promise.all(
-          vendors.map(async (v) => {
+          vendors.map(async (v: { id: string; name: string; projectId: string | null; project: { id: string; name: string } | null }) => {
             const totalPurchased = await prisma.expense.aggregate({
               where: {
                 type: 'material',
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     });
 
     const withBalances = await Promise.all(
-      vendors.map(async (v) => {
+      vendors.map(async (v: { id: string; name: string; projectId: string | null; project: { id: string; name: string } | null }) => {
         const totalPurchased = await prisma.expense.aggregate({
           where: {
             type: 'material',
