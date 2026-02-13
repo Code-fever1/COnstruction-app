@@ -3,6 +3,13 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
 
+interface ExpenseItem {
+  id: string;
+  amount: number;
+  project: { id: string; name: string } | null;
+  [key: string]: any;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -36,7 +43,7 @@ export async function GET(
       orderBy: { date: 'desc' },
     });
 
-    const totalPaid = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalPaid = expenses.reduce((sum: number, e: ExpenseItem) => sum + e.amount, 0);
 
     return NextResponse.json({
       ...contractor,
