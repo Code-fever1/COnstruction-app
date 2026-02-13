@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/postgresql';
+import { getErrorMessage } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,9 +48,9 @@ export async function POST(request: NextRequest) {
       { message: 'User created successfully', userId: user.id },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
