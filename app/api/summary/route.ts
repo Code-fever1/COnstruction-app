@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     const materialSummary: Record<string, { quantity: number; totalCost: number; unit: string }> = {};
     allExpenses
       .filter((exp: { type: string; materialName: string | null; materialQuantity: number | null }) => exp.type === 'material' && (exp.materialName || exp.materialQuantity != null))
-      .forEach((exp) => {
+      .forEach((exp: ExpenseRow) => {
         const name = exp.materialName ?? '';
         if (!materialSummary[name]) {
           materialSummary[name] = { quantity: 0, totalCost: 0, unit: exp.materialUnit ?? '' };
