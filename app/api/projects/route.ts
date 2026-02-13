@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
 import { normalizeNameList, projectToApiShape, projectFromBody } from '@/lib/api-helpers';
+import { getErrorMessage } from '@/types';
 
 async function syncProjectParties(
   projectId: string,
@@ -58,9 +59,9 @@ export async function GET(request: NextRequest) {
       orderBy: { createdAt: 'desc' },
     });
     return NextResponse.json(projects.map(projectToApiShape));
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if ((session.user as any).role !== 'owner') {
+    if (session.user.role !== 'owner') {
       return NextResponse.json(
         { error: 'Only owners can create projects' },
         { status: 403 }
@@ -94,9 +95,9 @@ export async function POST(request: NextRequest) {
     await syncProjectParties(project.id, contractorNames, vendorNames);
 
     return NextResponse.json(projectToApiShape(project), { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
