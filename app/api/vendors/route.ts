@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
+import { getErrorMessage } from '@/types';
 
 export async function GET(request: NextRequest) {
   try {
@@ -116,9 +117,9 @@ export async function GET(request: NextRequest) {
       })
     );
     return NextResponse.json(withBalances);
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -189,9 +190,9 @@ export async function POST(request: NextRequest) {
       { ...vendor, _id: vendor.id, projectId: vendor.project },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }

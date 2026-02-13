@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/postgresql';
+import { getErrorMessage } from '@/types';
 
 export async function GET(
   request: NextRequest,
@@ -41,8 +42,8 @@ export async function GET(
       orderBy: { date: 'desc' },
     });
 
-    const totalPurchased = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0);
+    const totalPurchased = expenses.reduce((sum: number, e) => sum + e.amount, 0);
+    const totalPaid = payments.reduce((sum: number, p) => sum + p.amount, 0);
 
     return NextResponse.json({
       ...vendor,
@@ -54,9 +55,9 @@ export async function GET(
       expenses: expenses.map((e) => ({ ...e, _id: e.id, projectId: e.project })),
       payments: payments.map((p) => ({ ...p, _id: p.id, enteredBy: p.enteredBy })),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -89,12 +90,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
     }
     return NextResponse.json({ ...vendor, _id: vendor.id, projectId: vendor.project });
-  } catch (error: any) {
-    if ((error as any).code === 'P2025') {
+  } catch (error: unknown) {
+    if ((error as { code?: string }).code === 'P2025') {
       return NextResponse.json({ error: 'Vendor not found' }, { status: 404 });
     }
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
@@ -109,7 +110,7 @@ export async function DELETE(
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    if ((session.user as any).role !== 'owner') {
+    if (session.user.role !== 'owner') {
       return NextResponse.json({ error: 'Only owner can delete vendors' }, { status: 403 });
     }
 
@@ -145,9 +146,9 @@ export async function DELETE(
 
     await prisma.vendor.delete({ where: { id } });
     return NextResponse.json({ message: 'Vendor deleted successfully' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: getErrorMessage(error) },
       { status: 500 }
     );
   }
