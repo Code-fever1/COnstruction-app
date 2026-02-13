@@ -66,7 +66,7 @@ export async function PUT(
             materialName: materialDetails?.materialName ?? null,
             materialQuantity: materialDetails?.quantity ?? null,
             materialUnit: materialDetails?.unit ?? null,
-            laborType: laborDetails?.laborType ?? null,
+            laborType: (laborDetails?.laborType as 'direct' | 'contractor') ?? null,
             contractorId: laborDetails?.contractorId ?? null,
             contractorName: laborDetails?.contractorName ?? null,
             teamName: laborDetails?.teamName ?? null,
