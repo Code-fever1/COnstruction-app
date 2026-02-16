@@ -194,6 +194,7 @@ enum ExpenseType {
   labor
   factory_overhead @map("factory-overhead")
   petty_cash      @map("petty-cash")
+  miscellaneous
 }
 
 enum PaidBy {
