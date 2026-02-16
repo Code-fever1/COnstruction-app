@@ -832,6 +832,10 @@ export default function ExpenseManagement() {
                   <option value="Tons">Tons</option>
                   <option value="Pieces">Pieces</option>
                   <option value="Liters">Liters</option>
+                  <option value="Truck">Truck</option>
+                  <option value="Trali">Trali</option>
+                  <option value="Dumper">Dumper</option>
+                  <option value="Rickshaw">Rickshaw</option>
                 </select>
               </div>
               <div className="col-span-3">
