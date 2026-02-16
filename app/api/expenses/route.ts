@@ -45,7 +45,7 @@ function mapExpenseToApi(exp: {
 }) {
   return {
     _id: exp.id,
-    projectId: exp.project ?? { _id: exp.projectId, name: (exp.project as { name?: string } | null)?.name },
+    projectId: exp.project ? { _id: exp.project.id, name: exp.project.name } : { _id: exp.projectId, name: '' },
     vendorId: exp.vendorRel?.id ?? exp.vendorId,
     vendor: exp.vendor,
     type: exp.type === 'factory_overhead' ? 'factory-overhead' : exp.type === 'petty_cash' ? 'petty-cash' : exp.type,
