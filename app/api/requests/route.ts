@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const newRequest = await prisma.editRequest.create({
       data: {
-        collectionName: data.collectionName as 'Expense' | 'Income' | 'Loan',
+        collectionName: data.collectionName as 'Expense' | 'Income' | 'Loan' | 'Contractor' | 'Vendor',
         originalId: data.originalId,
         newData: data.newData as object,
         status: 'pending',

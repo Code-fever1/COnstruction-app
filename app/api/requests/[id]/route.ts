@@ -101,6 +101,28 @@ export async function PUT(
             description: (updateData.description as string) ?? null,
           },
         });
+      } else if (editRequest.collectionName === 'Contractor') {
+        await prisma.contractor.update({
+          where: { id: editRequest.originalId },
+          data: {
+            name: updateData.name as string,
+            phone: (updateData.phone as string) ?? null,
+            area: updateData.area != null ? Number(updateData.area) : null,
+            rate: updateData.rate != null ? Number(updateData.rate) : null,
+            agreedAmount: Number(updateData.agreedAmount) || 0,
+            projectId: (updateData.projectId as string) ?? null,
+          },
+        });
+      } else if (editRequest.collectionName === 'Vendor') {
+        await prisma.vendor.update({
+          where: { id: editRequest.originalId },
+          data: {
+            name: updateData.name as string,
+            phone: (updateData.phone as string) ?? null,
+            address: (updateData.address as string) ?? null,
+            projectId: (updateData.projectId as string) ?? null,
+          },
+        });
       }
     } else if (action === 'reject') {
       newStatus = 'rejected';

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 interface EditRequest {
     _id: string;
-    collectionName: 'Expense' | 'Income' | 'Loan';
+    collectionName: 'Expense' | 'Income' | 'Loan' | 'Contractor' | 'Vendor';
     originalId: any;
     newData: any;
     status: 'pending' | 'approved' | 'rejected';
