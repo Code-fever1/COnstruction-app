@@ -108,7 +108,9 @@ export async function POST(request: NextRequest) {
 
     const trimmedName = String(data.name).trim();
     const trimmedPhone = String(data.phone).trim();
-    const agreedAmount = Number(data.agreedAmount) || 0;
+    const area = data.area ? Number(data.area) : null;
+    const rate = data.rate ? Number(data.rate) : null;
+    const agreedAmount = (area && rate) ? area * rate : (Number(data.agreedAmount) || 0);
 
     const existing = await prisma.contractor.findFirst({
       where: {
@@ -128,6 +130,8 @@ export async function POST(request: NextRequest) {
         ...(projectId ? { projectId } : {}),
         name: trimmedName,
         phone: trimmedPhone,
+        area,
+        rate,
         agreedAmount,
         totalPaid: 0,
         balance: agreedAmount,
