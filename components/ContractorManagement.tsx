@@ -21,6 +21,8 @@ interface Contractor {
     projectId?: { _id: string; name: string } | null;
     name: string;
     phone?: string;
+    area?: number | null;
+    rate?: number | null;
     agreedAmount: number;
     totalPaid: number;
     balance: number;
@@ -48,6 +50,8 @@ export default function ContractorManagement() {
         projectId: '',
         name: '',
         phone: '',
+        area: '',
+        rate: '',
         agreedAmount: '',
     });
 
@@ -92,6 +96,15 @@ export default function ContractorManagement() {
         fetchProjectContractors();
     }, [contractorEntryType, formData.projectId, projects]);
 
+    // Auto-calculate agreed amount when area or rate changes
+    useEffect(() => {
+        const area = parseFloat(formData.area) || 0;
+        const rate = parseFloat(formData.rate) || 0;
+        if (area && rate) {
+            setFormData(prev => ({ ...prev, agreedAmount: (area * rate).toString() }));
+        }
+    }, [formData.area, formData.rate]);
+
     const fetchProjects = async () => {
         try {
             const response = await fetch('/api/projects');
@@ -133,6 +146,8 @@ export default function ContractorManagement() {
             projectId: contractor.projectId?._id || '',
             name: contractor.name,
             phone: contractor.phone || '',
+            area: contractor.area?.toString() || '',
+            rate: contractor.rate?.toString() || '',
             agreedAmount: contractor.agreedAmount.toString(),
         });
         setContractorEntryType(contractor.projectId ? 'project' : 'general');
@@ -141,7 +156,7 @@ export default function ContractorManagement() {
     };
 
     const resetForm = () => {
-        setFormData({ projectId: '', name: '', phone: '', agreedAmount: '' });
+        setFormData({ projectId: '', name: '', phone: '', area: '', rate: '', agreedAmount: '' });
         setEditingContractor(null);
         setContractorEntryType('project');
         setShowContractorForm(false);
@@ -350,13 +365,36 @@ export default function ContractorManagement() {
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Agreed Amount</label>
+                            <label className="block text-sm font-medium text-gray-700">Area (sq ft/m)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                value={formData.area}
+                                onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                                placeholder="Enter area"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Rate (per sq ft/m)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                value={formData.rate}
+                                onChange={(e) => setFormData({ ...formData, rate: e.target.value })}
+                                placeholder="Enter rate"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Agreed Amount (Calculated)</label>
                             <input
                                 type="number"
                                 step="1"
-                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
+                                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
                                 value={formData.agreedAmount}
-                                onChange={(e) => setFormData({ ...formData, agreedAmount: e.target.value })}
+                                readOnly
+                                placeholder="Auto-calculated from area × rate"
                             />
                         </div>
                         <div className="md:col-span-2 flex justify-end gap-3">

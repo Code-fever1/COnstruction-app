@@ -149,7 +149,7 @@ export default function ExpenseManagement() {
   const [formData, setFormData] = useState({
     projectId: '',
     vendorId: '',
-    type: 'material' as 'material' | 'labor' | 'factory-overhead' | 'petty-cash',
+    type: 'material' as 'material' | 'labor' | 'factory-overhead' | 'petty-cash' | 'miscellaneous',
     amount: '',
     date: new Date().toISOString().split('T')[0],
     description: '',
@@ -589,6 +589,7 @@ export default function ExpenseManagement() {
                 <option value="labor">Labor</option>
                 <option value="factory-overhead">Factory Overhead</option>
                 <option value="petty-cash">Petty Cash</option>
+                <option value="miscellaneous">Miscellaneous</option>
               </select>
             </div>
             {formData.type === 'material' && (
@@ -983,6 +984,7 @@ export default function ExpenseManagement() {
                 <option value="labor">Labor</option>
                 <option value="factory-overhead">Factory Overhead</option>
                 <option value="petty-cash">Petty Cash</option>
+                <option value="miscellaneous">Miscellaneous</option>
               </select>
             </div>
           </div>
