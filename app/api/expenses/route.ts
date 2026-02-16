@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
         projectId: data.projectId,
         vendorId: data.vendorId || null,
         vendor: data.vendor ?? null,
-        type: (data.type === 'factory-overhead' ? 'factory_overhead' : data.type === 'petty-cash' ? 'petty_cash' : data.type) as 'material' | 'labor' | 'factory_overhead' | 'petty_cash' | 'miscellaneous',
+        type: (data.type === 'factory-overhead' ? 'factory_overhead' : data.type === 'petty-cash' ? 'petty_cash' : data.type) as any,
         amount: numericAmount,
         date: new Date(data.date),
         description: data.description,
