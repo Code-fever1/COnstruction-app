@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         totalPaid: 0,
         balance: agreedAmount,
         status: 'active',
-      },
+      } as any,
       include: { project: { select: { id: true, name: true } } },
     });
 
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { ...contractor, _id: contractor.id, projectId: contractor.project },
+      { ...contractor, _id: contractor.id, projectId: (contractor as any).project },
       { status: 201 }
     );
   } catch (error: unknown) {
