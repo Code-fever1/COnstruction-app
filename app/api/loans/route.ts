@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
     const serialized = loans.map((loan: { id: string; project: { id: string; name: string } | null; linkedProject: { id: string; name: string } | null; enteredBy: { id: string; name: string } | null }) => ({
       ...loan,
       _id: loan.id,
-      projectId: loan.project,
-      linkedProjectId: loan.linkedProject,
+      projectId: loan.project ? { _id: loan.project.id, name: loan.project.name } : null,
+      linkedProjectId: loan.linkedProject ? { _id: loan.linkedProject.id, name: loan.linkedProject.name } : null,
       enteredBy: loan.enteredBy,
     }));
     return NextResponse.json(serialized);
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
         },
       });
       return NextResponse.json(
-        { ...payWithRelations, _id: payWithRelations!.id, projectId: payWithRelations!.project, linkedProjectId: payWithRelations!.linkedProject, enteredBy: payWithRelations!.enteredBy },
+        { ...payWithRelations, _id: payWithRelations!.id, projectId: payWithRelations!.project ? { _id: payWithRelations!.project.id, name: payWithRelations!.project.name } : null, linkedProjectId: payWithRelations!.linkedProject ? { _id: payWithRelations!.linkedProject.id, name: payWithRelations!.linkedProject.name } : null, enteredBy: payWithRelations!.enteredBy },
         { status: 201 }
       );
     }
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       },
     });
     return NextResponse.json(
-      { ...loan, _id: loan.id, projectId: loan.project, enteredBy: loan.enteredBy },
+      { ...loan, _id: loan.id, projectId: loan.project ? { _id: loan.project.id, name: loan.project.name } : null, enteredBy: loan.enteredBy },
       { status: 201 }
     );
   } catch (error: unknown) {

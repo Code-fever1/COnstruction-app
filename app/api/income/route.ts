@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const serialized = income.map((inc: { id: string; project: { id: string; name: string } | null; enteredBy: { id: string; name: string } | null }) => ({
       ...inc,
       _id: inc.id,
-      projectId: inc.project,
+      projectId: inc.project ? { _id: inc.project.id, name: inc.project.name } : null,
       enteredBy: inc.enteredBy,
     }));
     return NextResponse.json(serialized);
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(
-      { ...income, _id: income.id, projectId: income.project, enteredBy: income.enteredBy },
+      { ...income, _id: income.id, projectId: income.project ? { _id: income.project.id, name: income.project.name } : null, enteredBy: income.enteredBy },
       { status: 201 }
     );
   } catch (error: unknown) {
